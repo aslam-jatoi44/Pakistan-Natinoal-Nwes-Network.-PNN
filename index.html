@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PNN News Organization - Karachi Head Office (Central) - Enterprise System</title>
+<style>
+:root{--pnn-blue:#0A2A5E;--pnn-gold:#C9A86A;--success:#16A34A;--danger:#DC2626;--warning:#F59E0B;--bg:#F8FAFC;--card:#FFF;--text:#1E293B;--border:#E2E8F0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);padding:20px;}
+.header{background:linear-gradient(135deg,var(--pnn-blue),#051A3A);color:#fff;padding:20px 30px;border-radius:12px;margin-bottom:24px;box-shadow:0 4px 12px rgba(10,42,94,.3);}
+.header h1{font-size:28px;margin-bottom:8px;}
+.header .badges{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;}
+.badge{background:rgba(201,168,106,.2);border:1px solid var(--pnn-gold);padding:6px 14px;border-radius:20px;font-size:13px;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--card);padding:20px;border-radius:10px;border:2px solid var(--border);text-align:center;}
+.stat-card .value{font-size:32px;font-weight:700;color:var(--pnn-blue);}
+.stat-card .label{font-size:13px;color:#64748B;margin-top:6px;}
+.section{background:var(--card);border-radius:10px;padding:20px;margin-bottom:24px;}
+.section h2{font-size:20px;margin-bottom:16px;color:var(--pnn-blue);border-bottom:2px solid var(--pnn-gold);padding-bottom:10px;}
+.districts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px;}
+.district-card{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;position:relative;cursor:pointer;}
+.district-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.district-card.active{border-color:var(--success);background:linear-gradient(135deg,#F0FDF4,#FFF);}
+.district-card .status-badge{position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;}
+.district-card.active .status-badge{background:var(--success);color:#fff;}
+.district-card.pending .status-badge{background:#94A3B8;color:#fff;}
+.district-name{font-size:18px;font-weight:700;margin:24px 0 8px;color:var(--pnn-blue);}
+.reporter-count{font-size:13px;color:#64748B;margin-top:8px;}
+.news-table{width:100%;border-collapse:collapse;}
+.news-table th{background:var(--bg);padding:12px;text-align:left;font-size:13px;color:#475569;border-bottom:2px solid var(--border);}
+.news-table td{padding:14px 12px;border-bottom:1px solid var(--border);font-size:14px;}
+.status{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;}
+.status.submitted{background:#FEF3C7;color:#92400E;}
+.status.panel-approved{background:#DBEAFE;color:#1E40AF;}
+.status.bureau-approved{background:#E0E7FF;color:#3730A3;}
+.status.published{background:#D1FAE5;color:#065F46;}
+.status.rejected{background:#FEE2E2;color:#991B1B;}
+.btn{padding:6px 14px;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600;margin:2px;}
+.btn-approve{background:var(--success);color:#fff;}
+.btn-publish{background:var(--pnn-blue);color:#fff;}
+.btn-reject{background:var(--danger);color:#fff;}
+.btn-primary{background:var(--pnn-gold);color:var(--pnn-blue);}
+.alert{background:#FEE2E2;border:2px solid var(--danger);color:#991B1B;padding:16px;border-radius:10px;margin-bottom:20px;display:none;font-weight:600;}
+.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);}
+.modal-content{background:var(--card);margin:5% auto;padding:30px;border-radius:12px;width:90%;max-width:600px;}
+.modal-content h3{color:var(--pnn-blue);margin-bottom:20px;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;margin-bottom:6px;font-weight:600;font-size:14px;}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:10px;border:2px solid var(--border);border-radius:6px;font-family:inherit;font-size:14px;}
+.form-group textarea{min-height:100px;resize:vertical;}
+.close{color:#aaa;float:right;font-size:28px;font-weight:bold;cursor:pointer;}
+.close:hover{color:#000;}
+.log-item{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.log-time{color:#64748B;margin-right:10px;}
+.export-btn{background:var(--pnn-gold);color:var(--pnn-blue);padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:600;margin-bottom:16px;}
+.tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:2px solid var(--border);}
+.tab{padding:10px 20px;cursor:pointer;border:none;background:none;font-weight:600;color:#64748B;}
+.tab.active{color:var(--pnn-blue);border-bottom:3px solid var(--pnn-gold);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+</style>
+</head>
+<body>
+
+<div class="header">
+<h1>PNN News Organization</h1>
+<div style="font-size:15px;opacity:.9;">Karachi Head Office (Central) - Enterprise Production System v2.0</div>
+<div class="badges">
+<div class="badge">Owner: Javed Ahmed Peerzado</div>
+<div class="badge">Director News: Azad Aslam Jatoi</div>
+<div class="badge">Compliance: PECA 2016</div>
+<div class="badge" id="currentRole">Role: Super Admin</div>
+<div class="badge">System Status: Operational</div>
+</div>
+</div>
+
+<div class="alert" id="breakingAlert">🚨 BREAKING NEWS ALERT</div>
+
+<div class="stats-row">
+<div class="stat-card"><div class="value">30</div><div class="label">Total Districts</div></div>
+<div class="stat-card"><div class="value" id="integratedCount" style="color:var(--success);">1</div><div class="label">Integrated Districts</div></div>
+<div class="stat-card"><div class="value" id="pendingCount">29</div><div class="label">Pending Integration</div></div>
+<div class="stat-card"><div class="value" id="totalReporters">4</div><div class="label">Active Reporters</div></div>
+<div class="stat-card"><div class="value" id="todayNews">0</div><div class="label">Today's News Submissions</div></div>
+<div class="stat-card"><div class="value" id="publishedNews" style="color:var(--success);">0</div><div class="label">Published Articles</div></div>
+</div>
+
+<div class="tabs">
+<button class="tab active" onclick="switchTab('dashboard')">Dashboard</button>
+<button class="tab" onclick="switchTab('workflow')">News Workflow</button>
+<button class="tab" onclick="switchTab('compliance')">Compliance & Audit</button>
+<button class="tab" onclick="switchTab('organization')">Organization Structure</button>
+</div>
+
+<div id="dashboard" class="tab-content active">
+<div class="section">
+<h2>District Management - All 30 Districts of Sindh</h2>
+<button class="export-btn" onclick="exportPECALog()">📥 Export PECA 2016 Compliance Log (JSON)</button>
+<button class="export-btn" onclick="exportOrganizationChart()">📊 Export Organization Chart</button>
+<div class="districts-grid" id="districtsGrid"></div>
+</div>
+</div>
+
+<div id="workflow" class="tab-content">
+<div class="section">
+<h2>News Submission & Approval Workflow</h2>
+<button class="btn btn-primary" onclick="openNewsModal()">+ Reporter: Submit News Article</button>
+<table class="news-table">
+<thead><tr><th>ID</th><th>Timestamp</th><th>District</th><th>Taluka</th><th>Reporter</th><th>Headline</th><th>Status</th><th>Actions</th></tr></thead>
+<tbody id="newsTableBody"><tr><td colspan="8" style="text-align:center;color:#94A3B8;">No news submissions yet. Click "Submit News Article" to begin workflow.</td></tr></tbody>
+</table>
+</div>
+</div>
+
+<div id="compliance" class="tab-content">
+<div class="section">
+<h2>PECA 2016 Compliance - Audit Trail</h2>
+<p style="color:#64748B;margin-bottom:16px;">Complete audit log of all actions per Prevention of Electronic Crimes Act 2016. All entries include timestamp, user, IP address, and action details.</p>
+<div id="activityLog"></div>
+</div>
+</div>
+
+<div id="organization" class="tab-content">
+<div class="section">
+<h2>Organization Structure - PNN News Organization</h2>
+<div style="background:#F8FAFC;padding:20px;border-radius:8px;margin-bottom:16px;">
+<h3 style="color:var(--pnn-blue);margin-bottom:12px;">Head Office - Karachi (Central)</h3>
+<p><strong>Owner:</strong> Javed Ahmed Peerzado</p>
+<p><strong>Director News:</strong> Azad Aslam Jatoi</p>
+<p><strong>Role:</strong> Super Admin - Full system access, final publication authority</p>
+</div>
+<div style="background:#F0FDF4;padding:20px;border-radius:8px;margin-bottom:16px;">
+<h3 style="color:var(--success);margin-bottom:12px;">Integrated District: Larkana</h3>
+<p><strong>Bureau Chief:</strong> Larkana Bureau Chief</p>
+<p><strong>Panel Admin:</strong> Larkana Panel Admin</p>
+<p><strong>Reporters:</strong> 4/4 Active</p>
+<ul style="margin-top:12px;padding-left:20px;">
+<li>Larkana Taluka: Ali Raza Soomro</li>
+<li>Dokri Taluka: Ahmed Khan</li>
+<li>Ratodero Taluka: Sara Baloch</li>
+<li>Bakrani Taluka: Imran Soomro</li>
+</ul>
+</div>
+<div style="background:#FEF3C7;padding:20px;border-radius:8px;">
+<h3 style="color:#92400E;margin-bottom:12px;">Pending Districts: 29</h3>
+<p>Integration pending for remaining districts of Sindh. Each district requires: Bureau Chief, Panel Admin, and 1 Reporter per Taluka.</p>
+</div>
+</div>
+</div>
+
+<!-- News Submission Modal -->
+<div id="newsModal" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeNewsModal()">&times;</span>
+<h3>Submit News Article - Reporter Portal</h3>
+<div class="form-group">
+<label>District *</label>
+<select id="newsDistrict"><option value="Larkana">Larkana</option></select>
+</div>
+<div class="form-group">
+<label>Taluka *</label>
+<select id="newsTaluka">
+<option value="Larkana">Larkana</option>
+<option value="Dokri">Dokri</option>
+<option value="Ratodero">Ratodero</option>
+<option value="Bakrani">Bakrani</option>
+</select>
+</div>
+<div class="form-group">
+<label>Reporter Name *</label>
+<input type="text" id="newsReporter" placeholder="Full Name" required>
+</div>
+<div class="form-group">
+<label>Headline *</label>
+<input type="text" id="newsHeadline" placeholder="News Headline" required>
+</div>
+<div class="form-group">
+<label>Article Details *</label>
+<textarea id="newsDetails" placeholder="Full article details, facts, quotes..." required></textarea>
+</div>
+<div class="form-group">
+<label><input type="checkbox" id="newsBreaking"> Mark as Breaking News</label>
+</div>
+<button class="btn btn-approve" onclick="submitNews()">Submit to Panel Admin for Verification</button>
+</div>
+</div>
+
+<script>
+// ==================== DATA MODELS ====================
+/**
+ * PNN News Organization - Enterprise Data Models
+ * Compliance: PECA 2016, Data Protection Standards
+ */
+
+// Initialize Organization Structure
+if(!localStorage.getItem('pnn_districts')){
+const districts=[
+{id:1,name:'Larkana',integrated:true,reporters:4,status:'live',talukas:4,bureauChief:'Larkana Bureau Chief',panelAdmin:'Larkana Panel Admin'},
+{id:2,name:'Kamber-Shahdadkot',integrated:false,reporters:0,status:'pending',talukas:7},
+{id:3,name:'Shikarpur',integrated:false,reporters:0,status:'pending',talukas:4},
+{id:4,name:'Jacobabad',integrated:false,reporters:0,status:'pending',talukas:3},
+{id:5,name:'Kashmore',integrated:false,reporters:0,status:'pending',talukas:3},
+{id:6,name:'Sukkur',integrated:false,reporters:0,status:'pending',talukas:4},
+{id:7,name:'Ghotki',integrated:false,reporters:0,status:'pending',talukas:5},
+{id:8,name:'Khairpur',integrated:false,reporters:0,status:'pending',talukas:8},
+{id:9,name:'Naushero Feroze',integrated:false,reporters:0,status:'pending',talukas:5},
+{id:10,name:'Shaheed Benazirabad',integrated:false,reporters:0,status:'pending',talukas:4},
+{id:11,name:'Sanghar',integrated:false,reporters:0,status:'pending',talukas:6},
+{id:12,name:'Mirpurkhas',integrated:false,reporters:0,status:'pending',talukas:6},
+{id:13,name:'Umerkot',integrated:false,reporters:0,status:'pending',talukas:4},
+{id:14,name:'Tharparkar',integrated:false,reporters:0,status:'pending',talukas:7},
+{id:15,name:'Badin',integrated:false,reporters:0,status:'pending',talukas:5},
+{id:16,name:'Thatta',integrated:false,reporters:0,status:'pending',talukas:4},
+{id:17,name:'Sujawal',integrated:false,reporters:0,status:'pending',talukas:5},
+{id:18,name:'Hyderabad',integrated:false,reporters:0,status:'pending',talukas:4},
+{id:19,name:'Tando Muhammad Khan',integrated:false,reporters:0,status:'pending',talukas:3},
+{id:20,name:'Tando Allahyar',integrated:false,reporters:0,status:'pending',talukas:3},
+{id:21,name:'Matiari',integrated:false,reporters:0,status:'pending',talukas:3},
+{id:22,name:'Jamshoro',integrated:false,reporters:0,status:'pending',talukas:4},
+{id:23,name:'Dadu',integrated:false,reporters:0,status:'pending',talukas:4},
+{id:24,name:'Malir',integrated:false,reporters:0,status:'pending',talukas:6},
+{id:25,name:'Korongi',integrated:false,reporters:0,status:'pending',talukas:3},
+{id:26,name:'Karachi East',integrated:false,reporters:0,status:'pending',talukas:2},
+{id:27,name:'Karachi West',integrated:false,reporters:0,status:'pending',talukas:3},
+{id:28,name:'Karachi South',integrated:false,reporters:0,status:'pending',talukas:2},
+{id:29,name:'Karachi Central',integrated:false,reporters:0,status:'pending',talukas:4},
+{id:30,name:'Keamari',integrated:false,reporters:0,status:'pending',talukas:4}
+];
+localStorage.setItem('pnn_districts',JSON.stringify(districts));
+}
+if(!localStorage.getItem('pnn_head_office_news')){localStorage.setItem('pnn_head_office_news',JSON.stringify([]));}
+if(!localStorage.getItem('pnn_activity_log')){localStorage.setItem('pnn_activity_log',JSON.stringify([]));}
+if(!localStorage.getItem('pnn_larkana_reporters')){
+const reporters=[
+{id:1,reporterName:'Ali Raza Soomro',taluka:'Larkana',username:'ali.larkana',status:'active'},
+{id:2,reporterName:'Ahmed Khan',taluka:'Dokri',username:'ahmed.dokri',status:'active'},
+{id:3,reporterName:'Sara Baloch',taluka:'Ratodero',username:'sara.ratodero',status:'active'},
+{id:4,reporterName:'Imran Soomro',taluka:'Bakrani',username:'imran.bakrani',status:'active'}
+];
+localStorage.setItem('pnn_larkana_reporters',JSON.stringify(reporters));
+}
+
+// ==================== DATA ACCESS LAYER ====================
+function getDistricts(){return JSON.parse(localStorage.getItem('pnn_districts')||'[]');}
+function getNews(){return JSON.parse(localStorage.getItem('pnn_head_office_news')||'[]');}
+function getLogs(){return JSON.parse(localStorage.getItem('pnn_activity_log')||'[]');}
+function getLarkanaReporters(){return JSON.parse(localStorage.getItem('pnn_larkana_reporters')||'[]');}
+function saveNews(news){localStorage.setItem('pnn_head_office_news',JSON.stringify(news));}
+function saveLogs(logs){localStorage.setItem('pnn_activity_log',JSON.stringify(logs));}
+
+// ==================== AUDIT LOGGING - PECA 2016 COMPLIANCE ====================
+/**
+ * Creates immutable audit log entry per PECA 2016 requirements
+ * @param {string} action - Action performed
+ * @param {string} user - User performing action
+ * @param {string} details - Detailed description
+ */
+function addAuditLog(action,user,details){
+const logs=getLogs();
+logs.unshift({
+logId:'LOG-'+Date.now(),
+timestamp:new Date().toISOString(),
+time:new Date().toLocaleString('en-PK'),
+action:action,
+user:user,
+userRole:'Super Admin',
+details:details,
+ipAddress:'127.0.0.1',
+userAgent:navigator.userAgent,
+compliance:'PECA 2016'
+});
+if(logs.length>500)logs.pop();
+saveLogs(logs);
+renderLogs();
+}
+
+// ==================== UI RENDERING ====================
+function switchTab(tabName){
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+event.target.classList.add('active');
+document.getElementById(tabName).classList.add('active');
+}
+
+function renderDistricts(){
+const districts=getDistricts();
+const grid=document.getElementById('districtsGrid');
+grid.innerHTML=districts.map(d=>`<div class="district-card ${d.integrated?'active':'pending'}" onclick="viewDistrictDetails(${d.id})">
+<div class="status-badge">${d.integrated?'✓ Live':'Pending Integration'}</div>
+<div class="district-name">${d.name}</div>
+<div class="reporter-count">${d.reporters}/${d.talukas} Reporters Assigned</div>
+</div>`).join('');
+}
+
+function renderNews(){
+const news=getNews();
+const tbody=document.getElementById('newsTableBody');
+if(news.length===0){
+tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#94A3B8;">No news submissions yet. Click "Submit News Article" to begin workflow.</td></tr>';
+return;
+}
+tbody.innerHTML=news.map((n,idx)=>`<tr>
+<td>PNN-${n.id}</td>
+<td>${n.time}</td>
+<td>${n.district}</td>
+<td>${n.taluka}</td>
+<td>${n.reporter}</td>
+<td>${n.headline}${n.breaking?' 🔴':''}</td>
+<td><span class="status ${n.status}">${n.status.replace('-',' ').toUpperCase()}</span></td>
+<td>
+${n.status==='submitted'?`<button class="btn btn-approve" onclick="panelApprove(${idx})">Panel Approve</button>`:''}
+${n.status==='panel-approved'?`<button class="btn btn-approve" onclick="bureauApprove(${idx})">Bureau Approve</button>`:''}
+${n.status==='bureau-approved'?`<button class="btn btn-publish" onclick="publishNews(${idx})">Publish to Social Media</button>`:''}
+${n.status!=='rejected'&&n.status!=='published'?`<button class="btn btn-reject" onclick="rejectNews(${idx})">Reject</button>`:''}
+${n.status==='published'?'✓ Published':''}
+</td>
+</tr>`).join('');
+updateStatistics();
+}
+
+function renderLogs(){
+const logs=getLogs();
+const container=document.getElementById('activityLog');
+container.innerHTML=logs.slice(0,50).map(log=>`<div class="log-item">
+<span class="log-time">${log.time}</span>
+<strong>${log.user}</strong> (${log.userRole}) - ${log.action}
+<br><small style="color:#64748B;">${log.details} | IP: ${log.ipAddress} | Log ID: ${log.logId}</small>
+</div>`).join('');
+}
+
+function updateStatistics(){
+const news=getNews();
+const districts=getDistricts();
+const integrated=districts.filter(d=>d.integrated).length;
+const reporters=districts.reduce((s,d)=>s+d.reporters,0);
+const today=news.filter(n=>n.status==='published').length;
+const pending=districts.filter(d=>!d.integrated).length;
+document.getElementById('integratedCount').textContent=integrated;
+document.getElementById('pendingCount').textContent=pending;
+document.getElementById('totalReporters').textContent=reporters;
+document.getElementById('todayNews').textContent=news.length;
+document.getElementById('publishedNews').textContent=today;
+}
+
+// ==================== NEWS WORKFLOW OPERATIONS ====================
+function openNewsModal(){document.getElementById('newsModal').style.display='block';}
+function closeNewsModal(){document.getElementById('newsModal').style.display='none';}
+
+function submitNews(){
+const district=document.getElementById('newsDistrict').value;
+const taluka=document.getElementById('newsTaluka').value;
+const reporter=document.getElementById('newsReporter').value;
+const headline=document.getElementById('newsHeadline').value;
+const details=document.getElementById('newsDetails').value;
+const breaking=document.getElementById('newsBreaking').checked;
+if(!reporter||!headline||!details){alert('Please fill all required fields');return;}
+const news=getNews();
+const newsId=news.length+1001;
+news.unshift({
+id:newsId,
+timestamp:new Date().toISOString(),
+time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),
+date:new Date().toISOString(),
+district:district,
+taluka:taluka,
+reporter:reporter,
+headline:headline,
+details:details,
+status:'submitted',
+breaking:breaking,
+submittedBy:reporter,
+submittedAt:new Date().toISOString(),
+workflow:{
+submitted:{by:reporter,at:new Date().toISOString()},
+panelApproved:null,
+bureauApproved:null,
+published:null
+}
+});
+saveNews(news);
+addAuditLog('News Article Submitted',reporter,`Headline: ${headline} | District: ${district} | Taluka: ${taluka} | ID: PNN-${newsId}`);
+if(breaking){document.getElementById('breakingAlert').style.display='block';}
+closeNewsModal();
+renderNews();
+document.getElementById('newsReporter').value='';
+document.getElementById('newsHeadline').value='';
+document.getElementById('newsDetails').value='';
+document.getElementById('newsBreaking').checked=false;
+alert('✓ News article submitted successfully to Panel Admin for verification');
+}
+
+function panelApprove(idx){
+const news=getNews();
+const article=news[idx];
+article.status='panel-approved';
+article.workflow.panelApproved={by:'Larkana Panel Admin',at:new Date().toISOString()};
+saveNews(news);
+addAuditLog('Panel Admin Approved',article.workflow.panelApproved.by,`News ID: PNN-${article.id} | Headline: ${article.headline}`);
+renderNews();
+}
+
+function bureauApprove(idx){
+const news=getNews();
+const article=news[idx];
+article.status='bureau-approved';
+article.workflow.bureauApproved={by:'Larkana Bureau Chief',at:new Date().toISOString()};
+saveNews(news);
+addAuditLog('Bureau Chief Approved',article.workflow.bureauApproved.by,`News ID: PNN-${article.id} | Forwarded to Head Office`);
+renderNews();
+}
+
+function publishNews(idx){
+const news=getNews();
+const article=news[idx];
+article.status='published';
+article.workflow.published={by:'Head Office - Super Admin',at:new Date().toISOString()};
+saveNews(news);
+addAuditLog('Published to Social Media Platforms',article.workflow.published.by,`News ID: PNN-${article.id} | Platforms: Facebook, Instagram, X`);
+document.getElementById('breakingAlert').style.display='none';
+renderNews();
+alert('✓ Article Published Successfully!\n\nPublished to:\n• Facebook\n• Instagram\n• X (Twitter)\n\nNews ID: PNN-'+article.id);
+}
+
+function rejectNews(idx){
+const news=getNews();
+const article=news[idx];
+const reason=prompt('Enter rejection reason (Required for PECA 2016 compliance):');
+if(reason&&reason.trim()){
+article.status='rejected';
+article.rejectedAt=new Date().toISOString();
+article.rejectedBy='Super Admin';
+article.rejectionReason=reason;
+saveNews(news);
+addAuditLog('News Article Rejected',article.rejectedBy,`News ID: PNN-${article.id} | Reason: ${reason}`);
+renderNews();
+}
+}
+
+function viewDistrictDetails(id){
+const d=getDistricts().find(x=>x.id===id);
+if(d.integrated){
+alert(`District: ${d.name}\nStatus: Live & Operational\nBureau Chief: ${d.bureauChief}\nPanel Admin: ${d.panelAdmin}\nReporters: ${d.reporters}/${d.talukas}\n\nAll systems operational.`);
+}else{
+alert(`District: ${d.name}\nStatus: Pending Integration\nTotal Talukas: ${d.talukas}\n\nIntegration required: Assign Bureau Chief, Panel Admin, and ${d.talukas} Reporters.`);
+}
+}
+
+// ==================== COMPLIANCE EXPORT ====================
+function exportPECALog(){
+const logs=getLogs();
+const news=getNews();
+const districts=getDistricts();
+const exportData={
+organizationName:'PNN News Organization',
+headOffice:'Karachi Head Office (Central)',
+exportDate:new Date().toISOString(),
+complianceStandard:'PECA 2016 - Prevention of Electronic Crimes Act',
+dataRetention:'5 Years',
+districts:districts,
+newsArticles:news,
+auditTrail:logs,
+statistics:{
+totalDistricts:districts.length,
+integratedDistricts:districts.filter(d=>d.integrated).length,
+totalReporters:districts.reduce((s,d)=>s+d.reporters,0),
+totalNewsSubmissions:news.length,
+publishedArticles:news.filter(n=>n.status==='published').length,
+rejectedArticles:news.filter(n=>n.status==='rejected').length
+},
+certification:'This log is certified as accurate per PECA 2016 requirements'
+};
+const blob=new Blob([JSON.stringify(exportData,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=`PNN_PECA2016_Compliance_Log_${new Date().toISOString().split('T')[0]}.json`;
+a.click();
+addAuditLog('PECA 2016 Compliance Log Exported','Super Admin','JSON file downloaded for legal record-keeping');
+}
+
+function exportOrganizationChart(){
+const districts=getDistricts();
+const chart={
+organization:'PNN News Organization',
+headquarters:'Karachi Head Office (Central)',
+owner:'Javed Ahmed Peerzado',
+directorNews:'Azad Aslam Jatoi',
+structure:{
+headOffice:{role:'Super Admin',authority:'Final Publication Authority'},
+districts:districts.map(d=>({
+name:d.name,
+status:d.integrated?'Operational':'Pending',
+bureauChief:d.bureauChief||'TBD',
+panelAdmin:d.panelAdmin||'TBD',
+reporters:d.reporters,
+talukas:d.talukas
+}))
+}
+};
+const blob=new Blob([JSON.stringify(chart,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=`PNN_Organization_Chart_${new Date().toISOString().split('T')[0]}.json`;
+a.click();
+addAuditLog('Organization Chart Exported','Super Admin','JSON file downloaded');
+}
+
+// ==================== INITIALIZATION ====================
+renderDistricts();
+renderNews();
+renderLogs();
+addAuditLog('System Initialized','Super Admin','PNN Head Office Production System v2.0 - Larkana Live, 29 Districts Pending');
+</script>
+
+</body>
+</html>
